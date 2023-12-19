@@ -1,3 +1,3 @@
-# electrical design
+# Electrical Design
 
-KiCad project, including schematic files, layout files, BOM file, PDF of your schematic!
+Zipped KiCad project, including schematic files, layout files, BOM file, PDF of PCB Radio.
