@@ -1,3 +1,3 @@
-# software
+# Software
 
-Software routines for running your module
+Software routines for running PCB Radio
