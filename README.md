@@ -1,11 +1,15 @@
-# Welcome to your EE156/256 Project Repo!
+# PCB Radio
 
-This repository is pre-populated with three folders: `electrical`, `software`, and `docs` for you to organize your project.
+This repository is contains all work involved in the production of PCB Radio.
 
-## Assignment 1 — Project Brief
+## Docs
 
-Submission instructions:
+Docs contains documents related to PCB Radio design and outline.
 
-1. create a new branch named "dev"
-2. add a PDF or word document to the document folder, commit it, and push it to GitHub
-3. make a "pull request" into the main branch of your repository.
+## Eletrical
+
+Electrical contains previous PCB Radio versions of schematic and PCB design.
+
+## Software
+
+Software includes all code used to program and run PCB Radio's microcontroller and other hardware.
