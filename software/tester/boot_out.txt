@@ -1,0 +1,3 @@
+Adafruit CircuitPython 9.0.5 on 2024-08-03; rat with samd51j19
+Board ID:rat
+UID:5BDA50F748364C5320202053360411FF
