@@ -263,6 +263,8 @@ typedef enum
   ES_LOCK,
   ES_UNLOCK,
   ES_VOL_BTN,
+  ES_VOLA,
+  ES_VOLB,
 }ES_EventType_t;
 
 /****************************************************************************/
