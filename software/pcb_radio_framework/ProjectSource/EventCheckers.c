@@ -39,7 +39,8 @@
 // include our own prototypes to insure consistency between header &
 // actual functionsdefinition
 #include "EventCheckers.h"
-#include "RotaryEncoderService.h"
+#include "VolumeService.h"
+#include "TuneService.h"
 
 // This is the event checking function sample. It is not intended to be
 // included in the module. It is only here as a sample to guide you in writing
@@ -127,7 +128,21 @@ bool Check4VolBtn(void) {
   if (LastState != CurrentState && CurrentState == 0) {
     ES_Event_t ThisEvent;
     ThisEvent.EventType = ES_VOL_BTN;
-    PostRotaryEncoderService(ThisEvent);
+    PostVolumeService(ThisEvent);
+    ReturnVal = true;
+  }
+  LastState = CurrentState;
+  return ReturnVal;
+}
+
+bool Check4FreqBtn(void) {
+  bool ReturnVal = false;
+  static volatile uint8_t LastState = 1;
+  uint8_t CurrentState = PORTBbits.RB12;
+  if (LastState != CurrentState && CurrentState == 0) {
+    ES_Event_t ThisEvent;
+    ThisEvent.EventType = ES_FREQ_BTN;
+    PostTuneService(ThisEvent);
     ReturnVal = true;
   }
   LastState = CurrentState;

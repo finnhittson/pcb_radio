@@ -43,7 +43,8 @@
                    projectFiles="true">
       <itemPath>ProjectHeaders/EventCheckWrapper.h</itemPath>
       <itemPath>ProjectHeaders/EventCheckers.h</itemPath>
-      <itemPath>ProjectHeaders/RotaryEncoderService.h</itemPath>
+      <itemPath>ProjectHeaders/VolumeService.h</itemPath>
+      <itemPath>ProjectHeaders/TuneService.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -59,7 +60,8 @@
                    projectFiles="true">
       <itemPath>ProjectSource/EventCheckers.c</itemPath>
       <itemPath>ProjectSource/main.c</itemPath>
-      <itemPath>ProjectSource/RotaryEncoderService.c</itemPath>
+      <itemPath>ProjectSource/VolumeService.c</itemPath>
+      <itemPath>ProjectSource/TuneService.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

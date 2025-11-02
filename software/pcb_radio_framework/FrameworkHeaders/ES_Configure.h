@@ -33,7 +33,7 @@
 /****************************************************************************/
 // This macro determines that nuber of services that are *actually* used in
 // a particular application. It will vary in value from 1 to MAX_NUM_SERVICES
-#define NUM_SERVICES 1
+#define NUM_SERVICES 2
 
 /****************************************************************************/
 // These are the definitions for Service 0, the lowest priority service.
@@ -41,11 +41,11 @@
 // services are added in numeric sequence (1,2,3,...) with increasing
 // priorities
 // the header file with the public function prototypes
-#define SERV_0_HEADER "RotaryEncoderService.h"
+#define SERV_0_HEADER "VolumeService.h"
 // the name of the Init function
-#define SERV_0_INIT InitRotaryEncoderService
+#define SERV_0_INIT InitVolumeService
 // the name of the run function
-#define SERV_0_RUN RunRotaryEncoderService
+#define SERV_0_RUN RunVolumeService
 // How big should this services Queue be?
 #define SERV_0_QUEUE_SIZE 5
 
@@ -57,11 +57,11 @@
 // These are the definitions for Service 1
 #if NUM_SERVICES > 1
 // the header file with the public function prototypes
-#define SERV_1_HEADER "TestHarnessService1.h"
+#define SERV_1_HEADER "TuneService.h"
 // the name of the Init function
-#define SERV_1_INIT InitTestHarnessService1
+#define SERV_1_INIT InitTuneService
 // the name of the run function
-#define SERV_1_RUN RunTestHarnessService1
+#define SERV_1_RUN RunTuneService
 // How big should this services Queue be?
 #define SERV_1_QUEUE_SIZE 3
 #endif
@@ -265,6 +265,9 @@ typedef enum
   ES_VOL_BTN,
   ES_VOLA,
   ES_VOLB,
+  ES_FREQ_BTN,
+  ES_FREQA,
+  ES_FREQB,
 }ES_EventType_t;
 
 /****************************************************************************/
@@ -299,7 +302,7 @@ typedef enum
 
 /****************************************************************************/
 // This is the list of event checking functions
-#define EVENT_CHECK_LIST Check4VolBtn
+#define EVENT_CHECK_LIST Check4VolBtn, Check4FreqBtn
 
 /****************************************************************************/
 // These are the definitions for the post functions to be executed when the
