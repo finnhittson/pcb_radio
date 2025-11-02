@@ -45,6 +45,7 @@
       <itemPath>ProjectHeaders/EventCheckers.h</itemPath>
       <itemPath>ProjectHeaders/VolumeService.h</itemPath>
       <itemPath>ProjectHeaders/TuneService.h</itemPath>
+      <itemPath>ProjectHeaders/RadioService.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -62,6 +63,7 @@
       <itemPath>ProjectSource/main.c</itemPath>
       <itemPath>ProjectSource/VolumeService.c</itemPath>
       <itemPath>ProjectSource/TuneService.c</itemPath>
+      <itemPath>ProjectSource/RadioService.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
