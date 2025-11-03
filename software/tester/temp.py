@@ -36,7 +36,7 @@ def power_on(i2c, addr):
 	result = bytearray(1)
 	i2c.writeto(addr, bytes([0x01, 0x10, 0x05]))
 	time.sleep(0.5)
-	i2c.readfrom_into(addr, result)
+	i2c.readfrom_into(addr, result)	
 	print(f"Result from power up is {result}")
 
 def reset(i2c, reset_pin):
