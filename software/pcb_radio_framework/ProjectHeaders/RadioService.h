@@ -4,6 +4,8 @@
 
 #include "ES_Types.h"
 
+#define READ		0x80
+#define WRITE		0x00
 #define ADDRESS 	0x63
 #define POWER_UP	0x01
 
