@@ -17,6 +17,63 @@ bool InitRadioService(uint8_t Priority) {
     MyPriority = Priority;
     DB_printf("Init Radio Service\n");
 
+    // ~{RST} - pin 25 - RB14 - output
+    TRISBbits.TRISB14 = 0;
+    // ~{SEN} - pin 24 - RB13 - output
+    TRISBbits.TRISB13 = 0;
+
+    InitI2C();
+    
+    ThisEvent.EventType = ES_INIT;
+    if (ES_PostToService(MyPriority, ThisEvent) == true) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool PostRadioService(ES_Event_t ThisEvent) {
+    return ES_PostToService(MyPriority, ThisEvent);
+}
+
+ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
+    ES_Event_t ReturnEvent;
+    ReturnEvent.EventType = ES_NO_EVENT;
+    switch (ThisEvent.EventType) {
+    case ES_INIT:
+        {
+            // set reset line low
+            LATBbits.LATB14 = 0;
+            // start timer for radio reset
+            ES_Timer_InitTimer(RADIO_TIMER, 100);
+            break;
+        }
+
+    case ES_TIMEOUT:
+        {
+            if (ThisEvent.EventParam == RADIO_TIMER) {
+                // set reset line high
+                LATBbits.LATB14 = 1;
+
+                // set ~{SEN} low to enable Si4735
+                LATBbits.LATB13 = 1;
+
+                PowerUp();
+                // SetFrequency(9010);
+                uint8_t bytes[1] = {0x10};
+                uint8_t result[2];
+                WriteRegister(bytes, 1, result, 2);
+            }
+            break;
+        }
+    }
+    return ReturnEvent;
+}
+
+/***************************************************************************
+ private functions
+ ***************************************************************************/
+void InitI2C(void) {
     // SCL - pin 17 - RB8 - input
     TRISBbits.TRISB8 = 1;
     // SDA - pin 18 - RB9 - input
@@ -39,73 +96,82 @@ bool InitRadioService(uint8_t Priority) {
     I2C1CONbits.SMEN = 0;
     // turn on I2C1 module
     I2C1CONbits.ON = 1;
-    
+}
+
+void WriteRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m) {
     // assert start condition 
     I2C1CONbits.SEN = 1;
     // wait for condition to be set
     while (I2C1CONbits.SEN);
-    
+
     // write slave address
     I2C1TRN = WRITE | ADDRESS;
     // wait for transmission to finish
     while (I2C1STATbits.TRSTAT);
     // check for acknowledgement from slave
     if (I2C1STATbits.ACKSTAT) {
-    	// handle NACK
+        // handle NACK
     }
 
-    // write data
-    I2C1TRN = POWER_UP;
-    // wait for acknowledgement from slave
-    while (I2C1STATbits.TRSTAT);
-
+    for (uint8_t i = 0; i < n; i++) {
+        // write data
+        I2C1TRN = bytes[i];
+        // wait for acknowledgement from slave
+        while (I2C1STATbits.TRSTAT);
+    }
+    
     // assert repeated start condition
     I2C1CONbits.RSEN = 1;
     // wait for condition to be set
     while (I2C1CONbits.RSEN);
-    
+
     // write slave address
     I2C1TRN = READ | ADDRESS;
     // wait for acknowledgement from slave
     while (I2C1STATbits.TRSTAT);
-    
-    // enable master receive serial data
-    I2C1CONbits.RCEN = 1;
-    // wait for data
-    while (!I2C1STATbits.RBF);
-    // read data
-    uint8_t data = I2C1RCV;
-    // send NACK in acknowledgement sequence
-    I2C1CONbits.ACKDT = 1;
-    // send acknowledgement sequence
-    I2C1CONbits.ACKEN = 1;
-    // wait for condition to be set
-    while (I2C1CONbits.ACKEN);
+
+    for (uint8_t j = 0; j < m; j++) {
+        // enable master receive serial data
+        I2C1CONbits.RCEN = 1;
+        // wait for data
+        while (!I2C1STATbits.RBF);
+        // read data
+        result[j] = I2C1RCV;
+        if (j == m - 1) {
+            // send NACK in acknowledgement sequence
+            I2C1CONbits.ACKDT = 1;
+        } else {
+            // send ACK in acknowledgement sequence
+            I2C1CONbits.ACKDT = 0;
+        }
+        // send acknowledgement sequence
+        I2C1CONbits.ACKEN = 1;
+        // wait for condition to be set
+        while (I2C1CONbits.ACKEN);
+    }
 
     // send stop bit
     I2C1CONbits.PEN = 1;
     // wait for condition to be set
     while (I2C1CONbits.PEN);
-
-    ThisEvent.EventType = ES_INIT;
-    if (ES_PostToService(MyPriority, ThisEvent) == true) {
-        return true;
-    } else {
-        return false;
-    }
 }
 
-bool PostRadioService(ES_Event_t ThisEvent) {
-    return ES_PostToService(MyPriority, ThisEvent);
+void PowerUp(void) {
+    uint8_t bytes[3];
+    uint8_t result[1];
+    bytes[0] = POWER_UP;
+    bytes[1] = 0x10;
+    bytes[2] = 0x05;
+    WriteRegister(bytes, 3, result, 1);
 }
 
-ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
-    ES_Event_t ReturnEvent;
-    ReturnEvent.EventType = ES_NO_EVENT;
-    
-    return ReturnEvent;
+void SetFrequency(uint16_t freq) {
+    uint8_t bytes[5];
+    uint8_t result[1];
+    bytes[0] = FM_TUNE_FREQ;
+    bytes[1] = 0x00;
+    bytes[2] = (freq >> 8) & 0xFF;
+    bytes[3] = freq & 0xFF;
+    bytes[4] = 0x00;
+    WriteRegister(bytes, 5, result, 1);
 }
-
-/***************************************************************************
- private functions
- ***************************************************************************/

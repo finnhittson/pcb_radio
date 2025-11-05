@@ -4,6 +4,7 @@
 #include "TuneService.h"
 #include <sys/attribs.h>
 #include "dbprintf.h"
+#include "RadioService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
