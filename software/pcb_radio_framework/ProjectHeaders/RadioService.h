@@ -52,6 +52,7 @@ void SetFrequency(uint16_t freq);
 bool InitOLED(void);
 void WriteCommand(uint8_t *bytes, uint8_t n);
 void UpdateOLED(void);
+void ClearOLED(void);
 
 #endif /* ServTemplate_H */
 

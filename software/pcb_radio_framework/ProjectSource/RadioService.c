@@ -3,6 +3,7 @@
 #include "ES_Framework.h"
 #include "RadioService.h"
 #include "dbprintf.h"
+#include <string.h>
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -23,13 +24,22 @@ bool InitRadioService(uint8_t Priority) {
     // ~{SEN} - pin 24 - RB13 - output
     TRISBbits.TRISB13 = 0;
 
+    
+
     InitI2C();
     if (InitOLED()) {
     	DB_printf("Display initialized correctly.\n");
     } else {
     	DB_printf("Unable to allocate enough space for display buffer.\n");
     }
-    
+    ClearOLED();
+    UpdateOLED();
+    uint8_t test[] = {0x38,0x54,0x6C,0x5C,0x2C,0x18};
+    for (uint8_t i = 10; i < 16; i++) {
+    	buffer[i] = test[i];
+    }
+    UpdateOLED();
+
     ThisEvent.EventType = ES_INIT;
     if (ES_PostToService(MyPriority, ThisEvent) == true) {
         return true;
@@ -202,8 +212,11 @@ void SetFrequency(uint16_t freq) {
 }
 
 bool InitOLED(void) {
-	if ((!buffer) && !(buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8)))) {
-    	return false;
+	if (!buffer) {
+    	buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8));
+	    if (!buffer) {
+	        return false;
+	    }
 	}
 
 	uint8_t bytes[8];
@@ -293,4 +306,8 @@ void UpdateOLED(void) {
 		bytesOut++;
 	}
 	WriteCommand(bytes, bytesOut);
+}
+
+void ClearOLED(void) {
+	memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
 }
