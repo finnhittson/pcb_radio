@@ -4,6 +4,7 @@
 #include "VolumeService.h"
 #include <sys/attribs.h>
 #include "dbprintf.h"
+#include "DisplayService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -15,7 +16,7 @@ bool VOLAFalling = false;
 bool VOLARising = false;
 bool VOLBFalling = false;
 bool VOLBRising = false;
-uint8_t vol = 20;
+volatile uint8_t vol = 20;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitVolumeService(uint8_t Priority) {
@@ -107,10 +108,19 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 VOLAFalling = false;
                 VOLBFalling = false;
                 VOLARising = false;
-                vol++;
+                if (vol < 50) {
+                    vol++;
+                }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
-                DB_printf("Volume: %d\n", vol);
+                // DB_printf("Volume: %d\n", vol);
+                if (getUpdateStatus()) {
+                    // vol--;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_VOL;
+                    ThisEvent.EventParam = vol;
+                    PostDisplayService(ThisEvent);
+                }
             } else if (VOLAFalling && !VOLBFalling && VOLARising) {
                 VOLAFalling = false;
                 VOLARising = false;
@@ -140,10 +150,19 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 VOLBFalling = false;
                 VOLAFalling = false;
                 VOLBRising = false;
-                vol--;
+                if (vol) {
+                    vol--;
+                }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
-                DB_printf("Volume: %d\n", vol);
+                // DB_printf("Volume: %d\n", vol);
+                if (getUpdateStatus()) {
+                    // vol++;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_VOL;
+                    ThisEvent.EventParam = vol;
+                    PostDisplayService(ThisEvent);
+                }
             } else if (VOLBFalling && !VOLAFalling && VOLBRising) {
                 VOLBFalling = false;
                 VOLBRising = false;

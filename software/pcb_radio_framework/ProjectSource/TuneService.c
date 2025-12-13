@@ -5,6 +5,7 @@
 #include <sys/attribs.h>
 #include "dbprintf.h"
 #include "RadioService.h"
+#include "DisplayService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -16,7 +17,7 @@ bool FREQAFalling = false;
 bool FREQARising = false;
 bool FREQBFalling = false;
 bool FREQBRising = false;
-uint8_t freq = 20;
+volatile uint16_t freq = 6400;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitTuneService(uint8_t Priority) {
@@ -105,10 +106,21 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQAFalling = false;
                 FREQBFalling = false;
                 FREQARising = false;
-                freq--;
+                if (freq == 6400) {
+                    freq = 10800;
+                } else {
+                    freq = freq - 10;
+                }
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
-                DB_printf("Frequency: %d\n", freq);
+                // DB_printf("Frequency: %d\n", freq);
+                if (getUpdateStatus()) {
+                    // freq = freq + 10;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_FREQ;
+                    ThisEvent.EventParam = freq;
+                    PostDisplayService(ThisEvent);
+                }
             } else if (FREQAFalling && !FREQBFalling && FREQARising) {
                 FREQAFalling = false;
                 FREQARising = false;
@@ -138,10 +150,21 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQBFalling = false;
                 FREQAFalling = false;
                 FREQBRising = false;
-                freq++;
+                if (freq == 10800) {
+                    freq = 6400;
+                } else {
+                    freq = freq + 10;
+                }
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
-                DB_printf("Frequency: %d\n", freq);
+                // DB_printf("Frequency: %d\n", freq);
+                if (getUpdateStatus()) {
+                    // freq = freq - 10;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_FREQ;
+                    ThisEvent.EventParam = freq;
+                    PostDisplayService(ThisEvent);
+                }
             } else if (FREQBFalling && !FREQAFalling && FREQBRising) {
                 FREQBFalling = false;
                 FREQBRising = false;
