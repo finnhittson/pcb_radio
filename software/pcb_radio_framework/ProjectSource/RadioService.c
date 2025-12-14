@@ -53,7 +53,7 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
             // set ~{RST} line low
             LATBbits.LATB14 = 0;
             // start timer for radio reset
-            // ES_Timer_InitTimer(RADIO_TIMER, 1000);
+            ES_Timer_InitTimer(RADIO_TIMER, 100);
             break;
         }
 
@@ -64,13 +64,29 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
                 LATBbits.LATB14 = 1;
                 PowerUp();
                 poweredUp = true;
-                ES_Timer_InitTimer(RADIO_TIMER, 200);
+                // ES_Timer_InitTimer(RADIO_TIMER, 2000);
             } else if (ThisEvent.EventParam == RADIO_TIMER) {
-                uint8_t bytes[1];
+                uint8_t bytes[3];
+                bytes[0] = WRITE | RADIO_ADDRESS;
+                bytes[1] = FM_TUNE_STATUS;
+                bytes[2] = 0x00;
                 uint8_t result[8];
-                bytes[0] = GET_REV;
-                WriteAndReadRegister(bytes, 1, result, 8);
+                WriteAndReadRegister(bytes, 3, result, 8);
             }
+            break;
+        }
+
+    case ES_UPDATE_VOL:
+        {
+            DB_printf("sending vol to radio\n");
+            SetVolume(ThisEvent.EventParam);            
+            break;
+        }
+
+    case ES_UPDATE_FREQ:
+        {
+            DB_printf("sending freq to radio\n");
+            SetFrequency(ThisEvent.EventParam);
             break;
         }
     }
@@ -88,7 +104,7 @@ void InitI2C(void) {
 
     // set baud rate
     I2C1BRG = 0x0C6;
-    I2C1BRG = 0x015;
+    I2C1BRG = 0x020; // for dispaly
 
     // turn off I2C1 module
     I2C1CONbits.ON = 0;
@@ -112,15 +128,6 @@ void WriteAndReadRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m)
     // wait for condition to be set
     while (I2C1CONbits.SEN);
 
-    // write slave address
-    I2C1TRN = WRITE | RADIO_ADDRESS;
-    // wait for transmission to finish
-    while (I2C1STATbits.TRSTAT);
-    // check for acknowledgement from slave
-    if (I2C1STATbits.ACKSTAT) {
-        // handle NACK
-    }
-
     for (uint8_t i = 0; i < n; i++) {
         // write data
         I2C1TRN = bytes[i];
@@ -134,7 +141,7 @@ void WriteAndReadRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m)
     while (I2C1CONbits.RSEN);
 
     // read slave address
-    I2C1TRN = READ | RADIO_ADDRESS;
+    I2C1TRN = READ | bytes[0];
     // wait for acknowledgement from slave
     while (I2C1STATbits.TRSTAT);
 
@@ -210,22 +217,41 @@ void WriteRegister(uint8_t *bytes, uint8_t n) {
 }
 
 void PowerUp(void) {
-    uint8_t bytes[3];
-    bytes[0] = POWER_UP;
-    bytes[1] = 0x10;
-    bytes[2] = 0x05;
-    WriteRegister(bytes, 3);
+    uint8_t bytes[4];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = POWER_UP;
+    bytes[2] = 0x10;
+    bytes[3] = 0x05;
+    WriteRegister(bytes, 4);
 }
 
 void SetFrequency(uint16_t freq) {
-    uint8_t bytes[5];
-    uint8_t result[1];
-    bytes[0] = FM_TUNE_FREQ;
-    bytes[1] = 0x00;
-    bytes[2] = (freq >> 8) & 0xFF;
-    bytes[3] = freq & 0xFF;
-    bytes[4] = 0x00;
-    // WriteRegister(bytes, 5, result, 1);
+    uint8_t bytes[6];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = FM_TUNE_FREQ;
+    bytes[2] = 0x00;
+    bytes[3] = (freq >> 8) & 0xFF;
+    bytes[4] = freq & 0xFF;
+    bytes[5] = 0x00;
+    WriteRegister(bytes, 6);
+
+    delay(5000);
+    bytes[1] = FM_TUNE_STATUS;
+    bytes[2] = 0x00;
+    uint8_t result[8];
+    WriteAndReadRegister(bytes, 3, result, 8);
+}
+
+void SetVolume(uint8_t vol) {
+    uint8_t bytes[7];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = SET_PROPERTY;
+    bytes[2] = 0x00;
+    bytes[3] = RX_VOLUME_H;
+    bytes[4] = RX_VOLUME_L;
+    bytes[5] = 0x00;
+    bytes[6] = vol;
+    WriteRegister(bytes, 7);
 }
 
 void delay(int n) {

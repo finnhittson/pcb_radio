@@ -53,7 +53,6 @@ ES_Event_t RunDisplayService(ES_Event_t ThisEvent) {
     switch (ThisEvent.EventType) {
     case ES_INIT:
         {
-            DB_printf("display on\n");
             strcpy(line1, "      PIG");
             snprintf(line2, sizeof(line2), "Vol:  %d oinks", 20);
             snprintf(line3, sizeof(line3), "Freq: %d.%d", 9010 / 100, (9010 / 10) % 10);
@@ -212,7 +211,6 @@ void UpdateBuffer(char *line1, char *line2, char *line3, uint8_t n, uint8_t m, u
         }
     }
     UpdateOLED();
-    DB_printf("bruh\n");
 }
 
 bool getUpdateStatus(void) {

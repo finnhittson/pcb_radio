@@ -17,7 +17,7 @@ bool FREQAFalling = false;
 bool FREQARising = false;
 bool FREQBFalling = false;
 bool FREQBRising = false;
-volatile uint16_t freq = 6400;
+volatile uint16_t freq = 9010;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitTuneService(uint8_t Priority) {
@@ -113,13 +113,14 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 }
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
-                // DB_printf("Frequency: %d\n", freq);
+                DB_printf("Frequency: %d\n", freq);
                 if (getUpdateStatus()) {
                     // freq = freq + 10;
                 } else {
                     ThisEvent.EventType = ES_UPDATE_FREQ;
                     ThisEvent.EventParam = freq;
-                    PostDisplayService(ThisEvent);
+                    PostRadioService(ThisEvent);
+                    // PostDisplayService(ThisEvent);
                 }
             } else if (FREQAFalling && !FREQBFalling && FREQARising) {
                 FREQAFalling = false;
@@ -157,13 +158,14 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 }
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
-                // DB_printf("Frequency: %d\n", freq);
+                DB_printf("Frequency: %d\n", freq);
                 if (getUpdateStatus()) {
                     // freq = freq - 10;
                 } else {
                     ThisEvent.EventType = ES_UPDATE_FREQ;
                     ThisEvent.EventParam = freq;
-                    PostDisplayService(ThisEvent);
+                    PostRadioService(ThisEvent);
+                    // PostDisplayService(ThisEvent);
                 }
             } else if (FREQBFalling && !FREQAFalling && FREQBRising) {
                 FREQBFalling = false;

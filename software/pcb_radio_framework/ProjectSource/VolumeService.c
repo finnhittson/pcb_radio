@@ -5,6 +5,7 @@
 #include <sys/attribs.h>
 #include "dbprintf.h"
 #include "DisplayService.h"
+#include "RadioService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -81,6 +82,12 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
     ES_Event_t ReturnEvent;
     ReturnEvent.EventType = ES_NO_EVENT;
     switch (ThisEvent.EventType) {
+    case ES_INIT:
+        {
+            DB_printf("volume init\n");
+            break;
+        }
+        
     case ES_VOL_BTN:
         {
          	DB_printf("Volume button pressed\n");
@@ -108,18 +115,19 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 VOLAFalling = false;
                 VOLBFalling = false;
                 VOLARising = false;
-                if (vol < 50) {
+                if (vol < 63) {
                     vol++;
                 }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
-                // DB_printf("Volume: %d\n", vol);
+                DB_printf("Volume: %d\n", vol);
                 if (getUpdateStatus()) {
                     // vol--;
                 } else {
                     ThisEvent.EventType = ES_UPDATE_VOL;
                     ThisEvent.EventParam = vol;
-                    PostDisplayService(ThisEvent);
+                    PostRadioService(ThisEvent);
+                    // PostDisplayService(ThisEvent);
                 }
             } else if (VOLAFalling && !VOLBFalling && VOLARising) {
                 VOLAFalling = false;
@@ -155,13 +163,14 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
-                // DB_printf("Volume: %d\n", vol);
+                DB_printf("Volume: %d\n", vol);
                 if (getUpdateStatus()) {
                     // vol++;
                 } else {
                     ThisEvent.EventType = ES_UPDATE_VOL;
                     ThisEvent.EventParam = vol;
-                    PostDisplayService(ThisEvent);
+                    PostRadioService(ThisEvent);
+                    // PostDisplayService(ThisEvent);
                 }
             } else if (VOLBFalling && !VOLAFalling && VOLBRising) {
                 VOLBFalling = false;
