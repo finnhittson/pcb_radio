@@ -76,7 +76,7 @@ ES_Event_t RunDisplayService(ES_Event_t ThisEvent) {
         {
             updating = true;
             uint16_t freq = ThisEvent.EventParam;
-            DB_printf("Seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
+            // DB_printf("Seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
             // snprintf(line3, sizeof(line3), "Freq: %d.%d", freq / 100, (freq / 10) % 10);
             char freq_str[20];
             snprintf(freq_str, sizeof(freq_str), "%d.%d", freq / 100, (freq / 10) % 10);

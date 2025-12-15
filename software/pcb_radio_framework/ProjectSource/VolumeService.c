@@ -18,6 +18,7 @@ bool VOLARising = false;
 bool VOLBFalling = false;
 bool VOLBRising = false;
 volatile uint8_t vol = 20;
+bool muted = false;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitVolumeService(uint8_t Priority) {
@@ -84,14 +85,19 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
     switch (ThisEvent.EventType) {
     case ES_INIT:
         {
-            DB_printf("volume init\n");
             break;
         }
-        
+
     case ES_VOL_BTN:
         {
-         	DB_printf("Volume button pressed\n");
-         	// clrScrn();
+         	muted = !muted;
+            ThisEvent.EventType = ES_UPDATE_VOL;
+            ThisEvent.EventParam = vol;
+            if (muted) {
+                ThisEvent.EventParam = 0;
+            }
+            PostRadioService(ThisEvent);
+            PostDisplayService(ThisEvent);
             break;
         }
 
