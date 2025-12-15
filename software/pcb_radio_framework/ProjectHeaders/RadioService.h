@@ -12,7 +12,9 @@
 #define GET_REV			0x10
 #define SET_PROPERTY	0x12
 #define GET_PROPERTY	0x13
+#define GET_INT_STATUS	0x14
 #define FM_TUNE_FREQ	0x20
+#define FM_SEEK_START	0x21
 #define FM_TUNE_STATUS	0x22
 #define RX_VOLUME_H		0x40
 #define RX_VOLUME_L		0x00
@@ -29,7 +31,7 @@ void WriteRegister(uint8_t *bytes, uint8_t n);
 void ReadRegister(uint8_t *result, uint8_t n);
 
 void PowerUp(void);
-void SetFrequency(uint16_t freq);
+void SetRadioFrequency(uint16_t freq);
 void SetVolume(uint8_t vol);
 void delay(int n);
 

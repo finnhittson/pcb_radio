@@ -127,7 +127,7 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                     ThisEvent.EventType = ES_UPDATE_VOL;
                     ThisEvent.EventParam = vol;
                     PostRadioService(ThisEvent);
-                    // PostDisplayService(ThisEvent);
+                    PostDisplayService(ThisEvent);
                 }
             } else if (VOLAFalling && !VOLBFalling && VOLARising) {
                 VOLAFalling = false;
@@ -170,7 +170,7 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                     ThisEvent.EventType = ES_UPDATE_VOL;
                     ThisEvent.EventParam = vol;
                     PostRadioService(ThisEvent);
-                    // PostDisplayService(ThisEvent);
+                    PostDisplayService(ThisEvent);
                 }
             } else if (VOLBFalling && !VOLAFalling && VOLBRising) {
                 VOLBFalling = false;

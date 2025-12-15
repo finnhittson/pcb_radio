@@ -18,7 +18,8 @@ bool FREQARising = false;
 bool FREQBFalling = false;
 bool FREQBRising = false;
 volatile uint16_t freq = 9010;
-
+bool freqInc = false;
+// #pragma config JTAGEN = OFF
 /*------------------------------ Module Code ------------------------------*/
 bool InitTuneService(uint8_t Priority) {
     DB_printf("Init Tune Service!\n");
@@ -31,7 +32,9 @@ bool InitTuneService(uint8_t Priority) {
     TRISBbits.TRISB11 = 1;
     // FREQ_BTN - pin 23 - RB12 - input
     TRISBbits.TRISB12 = 1;
-    
+    // disable analog input on RB12
+    ANSELBbits.ANSB12 = 0;
+
     // FREQA interrupt
     // disable interrupt
     IEC0bits.INT1IE = 0;
@@ -82,7 +85,8 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
     case ES_FREQ_BTN:
         {
          	DB_printf("Frequency button pressed\n");
-         	// clrScrn();
+         	ThisEvent.EventParam = freqInc;
+            PostRadioService(ThisEvent);
             break;
         }
 
@@ -111,6 +115,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 } else {
                     freq = freq - 10;
                 }
+                freqInc = false;
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
                 DB_printf("Frequency: %d\n", freq);
@@ -120,7 +125,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                     ThisEvent.EventType = ES_UPDATE_FREQ;
                     ThisEvent.EventParam = freq;
                     PostRadioService(ThisEvent);
-                    // PostDisplayService(ThisEvent);
+                    PostDisplayService(ThisEvent);
                 }
             } else if (FREQAFalling && !FREQBFalling && FREQARising) {
                 FREQAFalling = false;
@@ -156,6 +161,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 } else {
                     freq = freq + 10;
                 }
+                freqInc = true;
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
                 DB_printf("Frequency: %d\n", freq);
@@ -165,7 +171,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                     ThisEvent.EventType = ES_UPDATE_FREQ;
                     ThisEvent.EventParam = freq;
                     PostRadioService(ThisEvent);
-                    // PostDisplayService(ThisEvent);
+                    PostDisplayService(ThisEvent);
                 }
             } else if (FREQBFalling && !FREQAFalling && FREQBRising) {
                 FREQBFalling = false;
@@ -194,4 +200,8 @@ void __ISR(_EXTERNAL_3_VECTOR, IPL4SOFT) FREQBResp(void) {
     ES_Event_t ThisEvent;
     ThisEvent.EventType = ES_FREQB;
     PostTuneService(ThisEvent);
+}
+
+void SetTuneFrequency(uint16_t newFreq) {
+    freq = newFreq;
 }

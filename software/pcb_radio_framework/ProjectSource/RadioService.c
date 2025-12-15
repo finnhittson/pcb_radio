@@ -4,6 +4,8 @@
 #include "RadioService.h"
 #include "dbprintf.h"
 #include <string.h>
+#include "DisplayService.h"
+#include "TuneService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -86,7 +88,44 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
     case ES_UPDATE_FREQ:
         {
             DB_printf("sending freq to radio\n");
-            SetFrequency(ThisEvent.EventParam);
+            SetRadioFrequency(ThisEvent.EventParam);
+            break;
+        }
+
+    case ES_FREQ_BTN:
+        {
+            // starts FM seek command searching for valid station
+            uint8_t bytes[3];
+            bytes[0] = WRITE | RADIO_ADDRESS;
+            bytes[1] = FM_SEEK_START;
+            bytes[2] = ((uint8_t)(ThisEvent.EventParam) << 3) | 0x04;
+            WriteRegister(bytes, 3);
+            delay(1000);
+
+            // begins polling status until station frequency is reported in STATUS register
+            bool run = true;
+            uint8_t result[8];
+            uint16_t freq = 0x0000;
+            bytes[1] = FM_TUNE_STATUS;
+            bytes[2] = 0x01;
+            WriteAndReadRegister(bytes, 3, result, 8);
+            freq = (result[2] << 8) | result[3];
+            while (!freq) {
+                WriteAndReadRegister(bytes, 3, result, 8);
+                freq = (result[2] << 8) | result[3];
+                delay(1000);
+            }
+            ThisEvent.EventType = ES_UPDATE_FREQ;
+            ThisEvent.EventParam = freq;
+            SetTuneFrequency(freq);
+            PostDisplayService(ThisEvent);
+            // DB_printf("Seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
+
+            // clear tune set interrupt
+            bytes[1] = FM_TUNE_STATUS;
+            bytes[2] = 0x01;
+            WriteRegister(bytes, 3);
+
             break;
         }
     }
@@ -104,7 +143,6 @@ void InitI2C(void) {
 
     // set baud rate
     I2C1BRG = 0x0C6;
-    I2C1BRG = 0x020; // for dispaly
 
     // turn off I2C1 module
     I2C1CONbits.ON = 0;
@@ -172,6 +210,11 @@ void WriteAndReadRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m)
 }
 
 void WriteRegister(uint8_t *bytes, uint8_t n) {
+    if (bytes[0] == OLED_ADDRESS) {
+        I2C1BRG = 0x020;
+    } else if (bytes[0] == RADIO_ADDRESS) {
+        I2C1BRG = 0x0C6;
+    }
     // assert start condition 
     I2C1CONbits.SEN = 1;
     // wait for condition to be set
@@ -188,32 +231,6 @@ void WriteRegister(uint8_t *bytes, uint8_t n) {
     I2C1CONbits.PEN = 1;
     // wait for condition to be set
     while (I2C1CONbits.PEN);
-
-    // // assert start condition 
-    // I2C1CONbits.SEN = 1;
-    // // wait for condition to be set
-    // while (I2C1CONbits.SEN);
-
-    // // write slave address
-    // I2C1TRN = WRITE | RADIO_ADDRESS;
-    // // wait for transmission to finish
-    // while (I2C1STATbits.TRSTAT);
-    // // check for acknowledgement from slave
-    // if (I2C1STATbits.ACKSTAT) {
-    //     // handle NACK
-    // }
-
-    // for (uint8_t i = 0; i < n; i++) {
-    //     // write data
-    //     I2C1TRN = bytes[i];
-    //     // wait for acknowledgement from slave
-    //     while (I2C1STATbits.TRSTAT);
-    // }
-    
-    // // send stop bit
-    // I2C1CONbits.PEN = 1;
-    // // wait for condition to be set
-    // while (I2C1CONbits.PEN);
 }
 
 void PowerUp(void) {
@@ -225,7 +242,8 @@ void PowerUp(void) {
     WriteRegister(bytes, 4);
 }
 
-void SetFrequency(uint16_t freq) {
+void SetRadioFrequency(uint16_t freq) {
+    // send frequency to radio
     uint8_t bytes[6];
     bytes[0] = WRITE | RADIO_ADDRESS;
     bytes[1] = FM_TUNE_FREQ;
@@ -235,11 +253,19 @@ void SetFrequency(uint16_t freq) {
     bytes[5] = 0x00;
     WriteRegister(bytes, 6);
 
-    delay(5000);
+    // begin polling until frequency is reported in STATUS register
+    delay(1000);
     bytes[1] = FM_TUNE_STATUS;
-    bytes[2] = 0x00;
+    // clear interrupt flags
+    bytes[2] = 0x01;
     uint8_t result[8];
     WriteAndReadRegister(bytes, 3, result, 8);
+    freq = (result[2] << 8) | result[3];
+    while (!freq) {
+        WriteAndReadRegister(bytes, 3, result, 8);
+        freq = (result[2] << 8) | result[3];
+        delay(1000);
+    }
 }
 
 void SetVolume(uint8_t vol) {
