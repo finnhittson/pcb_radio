@@ -6,6 +6,7 @@
 #include <string.h>
 #include "DisplayService.h"
 #include "TuneService.h"
+#include "VolumeService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -19,7 +20,8 @@ bool poweredUp = false;
 bool InitRadioService(uint8_t Priority) {
     ES_Event_t ThisEvent;
     MyPriority = Priority;
-    DB_printf("Init Radio Service\n");
+    clrScrn();
+    DB_printf("Init radio service.\n");
 
     // ~{RST} - pin 25 - RB14 - output
     TRISBbits.TRISB14 = 0;
@@ -32,7 +34,7 @@ bool InitRadioService(uint8_t Priority) {
     LATBbits.LATB13 = 0;
 
     InitI2C();
-    DB_printf("I2C initialized.\n");
+    // DB_printf("I2C initialized.\n");
 
     ThisEvent.EventType = ES_INIT;
     if (ES_PostToService(MyPriority, ThisEvent) == true) {
@@ -57,7 +59,7 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
             // start timer for radio reset
             ES_Timer_InitTimer(RADIO_TIMER, 100);
             break;
-        }
+        }      
 
     case ES_TIMEOUT:
         {
@@ -66,28 +68,32 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
                 LATBbits.LATB14 = 1;
                 PowerUp();
                 poweredUp = true;
-                // ES_Timer_InitTimer(RADIO_TIMER, 2000);
+                ES_Timer_InitTimer(RADIO_TIMER, 200);
             } else if (ThisEvent.EventParam == RADIO_TIMER) {
-                uint8_t bytes[3];
-                bytes[0] = WRITE | RADIO_ADDRESS;
-                bytes[1] = FM_TUNE_STATUS;
-                bytes[2] = 0x00;
-                uint8_t result[8];
-                WriteAndReadRegister(bytes, 3, result, 8);
+                ThisEvent.EventType = ES_INIT;
+                PostVolumeService(ThisEvent);
+                PostTuneService(ThisEvent);
+
+                // uint8_t bytes[3];
+                // bytes[0] = WRITE | RADIO_ADDRESS;
+                // bytes[1] = FM_TUNE_STATUS;
+                // bytes[2] = 0x00;
+                // uint8_t result[8];
+                // WriteAndReadRegister(bytes, 3, result, 8);
             }
             break;
         }
 
     case ES_UPDATE_VOL:
         {
-            DB_printf("sending vol to radio\n");
+            // DB_printf("sending vol to radio\n");
             SetVolume(ThisEvent.EventParam);            
             break;
         }
 
     case ES_UPDATE_FREQ:
         {
-            DB_printf("sending freq to radio\n");
+            // DB_printf("sending freq to radio\n");
             SetRadioFrequency(ThisEvent.EventParam);
             break;
         }
@@ -105,12 +111,13 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
             // begins polling status until station frequency is reported in STATUS register
             bool run = true;
             uint8_t result[8];
+            uint16_t oldFreq = GetTuneFrequency();
             uint16_t freq = 0x0000;
             bytes[1] = FM_TUNE_STATUS;
             bytes[2] = 0x01;
             WriteAndReadRegister(bytes, 3, result, 8);
             freq = (result[2] << 8) | result[3];
-            while (!freq) {
+            while (!freq || freq == oldFreq) {
                 WriteAndReadRegister(bytes, 3, result, 8);
                 freq = (result[2] << 8) | result[3];
                 delay(1000);
@@ -119,7 +126,8 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
             ThisEvent.EventParam = freq;
             SetTuneFrequency(freq);
             PostDisplayService(ThisEvent);
-            // DB_printf("Seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
+            DB_printf("New seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
+            DB_printf("Old seeked frequency: %d.%d MHz\n\n", oldFreq / 100, (oldFreq / 10) % 10);
 
             // clear tune set interrupt
             bytes[1] = FM_TUNE_STATUS;
@@ -278,10 +286,22 @@ void SetVolume(uint8_t vol) {
     bytes[5] = 0x00;
     bytes[6] = vol;
     WriteRegister(bytes, 7);
+
+    // delay(1000);
+    // uint8_t result[4];
+    // bytes[1] = GET_PROPERTY;
+    // bytes[2] = 0x00;
+    // bytes[3] = RX_VOLUME_H;
+    // bytes[4] = RX_VOLUME_L;
+    // WriteAndReadRegister(bytes, 5, result, 4);
 }
 
 void delay(int n) {
     while (n > 0) {
         n--;
     }
+}
+
+bool GetPoweredUp(void) {
+    return poweredUp;
 }

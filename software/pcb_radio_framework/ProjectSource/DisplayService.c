@@ -7,6 +7,7 @@
 #include "RadioService.h"
 #include <string.h>
 #include <stdio.h>
+#include "TuneService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -29,11 +30,7 @@ bool InitDisplayService(uint8_t Priority) {
     MyPriority = Priority;
     DB_printf("Init display service.\n");
     
-    if (InitOLED()) {
-        DB_printf("Display initialized correctly.\n");
-    } else {
-        DB_printf("Unable to allocate enough space for display buffer.\n");
-    }
+    InitOLED();
     
     ThisEvent.EventType = ES_INIT;
     if (ES_PostToService(MyPriority, ThisEvent) == true) {
@@ -55,7 +52,8 @@ ES_Event_t RunDisplayService(ES_Event_t ThisEvent) {
         {
             strcpy(line1, "      PIG");
             snprintf(line2, sizeof(line2), "Vol:  %d oinks", 20);
-            snprintf(line3, sizeof(line3), "Freq: %d.%d", 9010 / 100, (9010 / 10) % 10);
+            uint16_t freq = GetTuneFrequency();
+            snprintf(line3, sizeof(line3), "Freq: %d.%d", freq / 100, (freq / 10) % 10);
             UpdateBuffer(line1, line2, line3, 16, 16, 16);
             break;
         }

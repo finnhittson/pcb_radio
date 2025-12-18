@@ -22,8 +22,7 @@ bool muted = false;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitVolumeService(uint8_t Priority) {
-    clrScrn();
-    DB_printf("Init Volume Service\n");
+    DB_printf("Init volume service.\n");
     ES_Event_t ThisEvent;
     MyPriority = Priority;
     
@@ -85,6 +84,11 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
     switch (ThisEvent.EventType) {
     case ES_INIT:
         {
+            if (GetPoweredUp()) {
+                ThisEvent.EventType = ES_UPDATE_VOL;
+                ThisEvent.EventParam = vol;
+                PostRadioService(ThisEvent);
+            }
             break;
         }
 

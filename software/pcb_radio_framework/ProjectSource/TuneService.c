@@ -17,12 +17,12 @@ bool FREQAFalling = false;
 bool FREQARising = false;
 bool FREQBFalling = false;
 bool FREQBRising = false;
-volatile uint16_t freq = 9010;
-bool freqInc = false;
-// #pragma config JTAGEN = OFF
+uint16_t freq = 9010;
+bool freqInc = true;
+
 /*------------------------------ Module Code ------------------------------*/
 bool InitTuneService(uint8_t Priority) {
-    DB_printf("Init Tune Service!\n");
+    DB_printf("Init tune service.\n");
     ES_Event_t ThisEvent;
     MyPriority = Priority;
     
@@ -82,6 +82,16 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
     ES_Event_t ReturnEvent;
     ReturnEvent.EventType = ES_NO_EVENT;
     switch (ThisEvent.EventType) {
+    case ES_INIT:
+        {
+            if (GetPoweredUp()) {
+                ThisEvent.EventType = ES_UPDATE_FREQ;
+                ThisEvent.EventParam = GetTuneFrequency();
+                PostRadioService(ThisEvent);
+            }
+            break;
+        }
+
     case ES_FREQ_BTN:
         {
          	DB_printf("Frequency button pressed\n");
@@ -110,7 +120,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQAFalling = false;
                 FREQBFalling = false;
                 FREQARising = false;
-                if (freq == 6400) {
+                if (freq == 8750) {
                     freq = 10800;
                 } else {
                     freq = freq - 10;
@@ -157,7 +167,7 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQAFalling = false;
                 FREQBRising = false;
                 if (freq == 10800) {
-                    freq = 6400;
+                    freq = 8750;
                 } else {
                     freq = freq + 10;
                 }
@@ -204,4 +214,8 @@ void __ISR(_EXTERNAL_3_VECTOR, IPL4SOFT) FREQBResp(void) {
 
 void SetTuneFrequency(uint16_t newFreq) {
     freq = newFreq;
+}
+
+uint16_t GetTuneFrequency(void) {
+    return freq;
 }

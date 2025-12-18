@@ -10,6 +10,7 @@ bool InitTuneService(uint8_t Priority);
 bool PostTuneService(ES_Event_t ThisEvent);
 ES_Event_t RunTuneService(ES_Event_t ThisEvent);
 void SetTuneFrequency(uint16_t newFreq);
+uint16_t GetTuneFrequency(void);
 
 #endif /* ServTemplate_H */
 

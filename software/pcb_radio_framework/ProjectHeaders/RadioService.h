@@ -34,6 +34,7 @@ void PowerUp(void);
 void SetRadioFrequency(uint16_t freq);
 void SetVolume(uint8_t vol);
 void delay(int n);
+bool GetPoweredUp(void);
 
 #endif /* ServTemplate_H */
 
