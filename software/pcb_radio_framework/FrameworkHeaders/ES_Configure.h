@@ -33,7 +33,7 @@
 /****************************************************************************/
 // This macro determines that nuber of services that are *actually* used in
 // a particular application. It will vary in value from 1 to MAX_NUM_SERVICES
-#define NUM_SERVICES 3
+#define NUM_SERVICES 4
 
 /****************************************************************************/
 // These are the definitions for Service 0, the lowest priority service.
@@ -41,11 +41,11 @@
 // services are added in numeric sequence (1,2,3,...) with increasing
 // priorities
 // the header file with the public function prototypes
-#define SERV_0_HEADER "VolumeService.h"
+#define SERV_0_HEADER "RadioService.h"
 // the name of the Init function
-#define SERV_0_INIT InitVolumeService
+#define SERV_0_INIT InitRadioService
 // the name of the run function
-#define SERV_0_RUN RunVolumeService
+#define SERV_0_RUN RunRadioService
 // How big should this services Queue be?
 #define SERV_0_QUEUE_SIZE 5
 
@@ -57,11 +57,11 @@
 // These are the definitions for Service 1
 #if NUM_SERVICES > 1
 // the header file with the public function prototypes
-#define SERV_1_HEADER "TuneService.h"
+#define SERV_1_HEADER "VolumeService.h"
 // the name of the Init function
-#define SERV_1_INIT InitTuneService
+#define SERV_1_INIT InitVolumeService
 // the name of the run function
-#define SERV_1_RUN RunTuneService
+#define SERV_1_RUN RunVolumeService
 // How big should this services Queue be?
 #define SERV_1_QUEUE_SIZE 3
 #endif
@@ -70,11 +70,11 @@
 // These are the definitions for Service 2
 #if NUM_SERVICES > 2
 // the header file with the public function prototypes
-#define SERV_2_HEADER "RadioService.h"
+#define SERV_2_HEADER "TuneService.h"
 // the name of the Init function
-#define SERV_2_INIT InitRadioService
+#define SERV_2_INIT InitTuneService
 // the name of the run function
-#define SERV_2_RUN RunRadioService
+#define SERV_2_RUN RunTuneService
 // How big should this services Queue be?
 #define SERV_2_QUEUE_SIZE 3
 #endif
@@ -83,11 +83,11 @@
 // These are the definitions for Service 3
 #if NUM_SERVICES > 3
 // the header file with the public function prototypes
-#define SERV_3_HEADER "TestHarnessService3.h"
+#define SERV_3_HEADER "DisplayService.h"
 // the name of the Init function
-#define SERV_3_INIT InitTestHarnessService3
+#define SERV_3_INIT InitDisplayService
 // the name of the run function
-#define SERV_3_RUN RunTestHarnessService3
+#define SERV_3_RUN RunDisplayService
 // How big should this services Queue be?
 #define SERV_3_QUEUE_SIZE 3
 #endif
@@ -96,11 +96,11 @@
 // These are the definitions for Service 4
 #if NUM_SERVICES > 4
 // the header file with the public function prototypes
-#define SERV_4_HEADER "TestHarnessService4.h"
+#define SERV_4_HEADER "NeoPixelService.h"
 // the name of the Init function
-#define SERV_4_INIT InitTestHarnessService4
+#define SERV_4_INIT InitNeoPixelService
 // the name of the run function
-#define SERV_4_RUN RunTestHarnessService4
+#define SERV_4_RUN RunNeoPixelService
 // How big should this services Queue be?
 #define SERV_4_QUEUE_SIZE 3
 #endif
@@ -268,6 +268,8 @@ typedef enum
   ES_FREQ_BTN,
   ES_FREQA,
   ES_FREQB,
+  ES_UPDATE_VOL,
+  ES_UPDATE_FREQ
 }ES_EventType_t;
 
 /****************************************************************************/

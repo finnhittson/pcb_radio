@@ -4,6 +4,9 @@
 #include "RadioService.h"
 #include "dbprintf.h"
 #include <string.h>
+#include "DisplayService.h"
+#include "TuneService.h"
+#include "VolumeService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -11,34 +14,27 @@
 
 /*---------------------------- Module Variables ---------------------------*/
 static uint8_t MyPriority;
-uint8_t *buffer;
+bool poweredUp = false;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitRadioService(uint8_t Priority) {
     ES_Event_t ThisEvent;
     MyPriority = Priority;
-    DB_printf("Init Radio Service\n");
+    clrScrn();
+    DB_printf("Init radio service.\n");
 
     // ~{RST} - pin 25 - RB14 - output
     TRISBbits.TRISB14 = 0;
+    // set ~{RST} pin high
+    LATBbits.LATB14 = 1;
+
     // ~{SEN} - pin 24 - RB13 - output
     TRISBbits.TRISB13 = 0;
-
-    
+    // set ~{SEN} LOW to set 0x11 address
+    LATBbits.LATB13 = 0;
 
     InitI2C();
-    if (InitOLED()) {
-    	DB_printf("Display initialized correctly.\n");
-    } else {
-    	DB_printf("Unable to allocate enough space for display buffer.\n");
-    }
-    ClearOLED();
-    UpdateOLED();
-    uint8_t test[] = {0x38,0x54,0x6C,0x5C,0x2C,0x18};
-    for (uint8_t i = 10; i < 16; i++) {
-    	buffer[i] = test[i];
-    }
-    UpdateOLED();
+    // DB_printf("I2C initialized.\n");
 
     ThisEvent.EventType = ES_INIT;
     if (ES_PostToService(MyPriority, ThisEvent) == true) {
@@ -58,28 +54,86 @@ ES_Event_t RunRadioService(ES_Event_t ThisEvent) {
     switch (ThisEvent.EventType) {
     case ES_INIT:
         {
-            // set reset line low
+            // set ~{RST} line low
             LATBbits.LATB14 = 0;
             // start timer for radio reset
-            // ES_Timer_InitTimer(RADIO_TIMER, 100);
+            ES_Timer_InitTimer(RADIO_TIMER, 100);
             break;
-        }
+        }      
 
     case ES_TIMEOUT:
         {
-            if (ThisEvent.EventParam == RADIO_TIMER) {
-                // set reset line high
+            if (ThisEvent.EventParam == RADIO_TIMER && !poweredUp) {
+                // set ~{RST} line high
                 LATBbits.LATB14 = 1;
-
-                // set ~{SEN} low to enable Si4735
-                LATBbits.LATB13 = 1;
-
                 PowerUp();
-                // SetFrequency(9010);
-                uint8_t bytes[1] = {0x10};
-                uint8_t result[2];
-                WriteRegister(bytes, 1, result, 2);
+                poweredUp = true;
+                ES_Timer_InitTimer(RADIO_TIMER, 200);
+            } else if (ThisEvent.EventParam == RADIO_TIMER) {
+                ThisEvent.EventType = ES_INIT;
+                PostVolumeService(ThisEvent);
+                PostTuneService(ThisEvent);
+
+                // uint8_t bytes[3];
+                // bytes[0] = WRITE | RADIO_ADDRESS;
+                // bytes[1] = FM_TUNE_STATUS;
+                // bytes[2] = 0x00;
+                // uint8_t result[8];
+                // WriteAndReadRegister(bytes, 3, result, 8);
             }
+            break;
+        }
+
+    case ES_UPDATE_VOL:
+        {
+            // DB_printf("sending vol to radio\n");
+            SetVolume(ThisEvent.EventParam);            
+            break;
+        }
+
+    case ES_UPDATE_FREQ:
+        {
+            // DB_printf("sending freq to radio\n");
+            SetRadioFrequency(ThisEvent.EventParam);
+            break;
+        }
+
+    case ES_FREQ_BTN:
+        {
+            // starts FM seek command searching for valid station
+            uint8_t bytes[3];
+            bytes[0] = WRITE | RADIO_ADDRESS;
+            bytes[1] = FM_SEEK_START;
+            bytes[2] = ((uint8_t)(ThisEvent.EventParam) << 3) | 0x04;
+            WriteRegister(bytes, 3);
+            delay(1000);
+
+            // begins polling status until station frequency is reported in STATUS register
+            bool run = true;
+            uint8_t result[8];
+            uint16_t oldFreq = GetTuneFrequency();
+            uint16_t freq = 0x0000;
+            bytes[1] = FM_TUNE_STATUS;
+            bytes[2] = 0x01;
+            WriteAndReadRegister(bytes, 3, result, 8);
+            freq = (result[2] << 8) | result[3];
+            while (!freq || freq == oldFreq) {
+                WriteAndReadRegister(bytes, 3, result, 8);
+                freq = (result[2] << 8) | result[3];
+                delay(1000);
+            }
+            ThisEvent.EventType = ES_UPDATE_FREQ;
+            ThisEvent.EventParam = freq;
+            SetTuneFrequency(freq);
+            PostDisplayService(ThisEvent);
+            DB_printf("New seeked frequency: %d.%d MHz\n", freq / 100, (freq / 10) % 10);
+            DB_printf("Old seeked frequency: %d.%d MHz\n\n", oldFreq / 100, (oldFreq / 10) % 10);
+
+            // clear tune set interrupt
+            bytes[1] = FM_TUNE_STATUS;
+            bytes[2] = 0x01;
+            WriteRegister(bytes, 3);
+
             break;
         }
     }
@@ -114,20 +168,11 @@ void InitI2C(void) {
     I2C1CONbits.ON = 1;
 }
 
-void WriteRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m) {
+void WriteAndReadRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m) {
     // assert start condition 
     I2C1CONbits.SEN = 1;
     // wait for condition to be set
     while (I2C1CONbits.SEN);
-
-    // write slave address
-    I2C1TRN = WRITE | RADIO_ADDRESS;
-    // wait for transmission to finish
-    while (I2C1STATbits.TRSTAT);
-    // check for acknowledgement from slave
-    if (I2C1STATbits.ACKSTAT) {
-        // handle NACK
-    }
 
     for (uint8_t i = 0; i < n; i++) {
         // write data
@@ -141,8 +186,8 @@ void WriteRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m) {
     // wait for condition to be set
     while (I2C1CONbits.RSEN);
 
-    // write slave address
-    I2C1TRN = READ | RADIO_ADDRESS;
+    // read slave address
+    I2C1TRN = READ | bytes[0];
     // wait for acknowledgement from slave
     while (I2C1STATbits.TRSTAT);
 
@@ -172,7 +217,12 @@ void WriteRegister(uint8_t *bytes, uint8_t n, uint8_t *result, uint8_t m) {
     while (I2C1CONbits.PEN);
 }
 
-void WriteCommand(uint8_t *bytes, uint8_t n) {
+void WriteRegister(uint8_t *bytes, uint8_t n) {
+    if (bytes[0] == OLED_ADDRESS) {
+        I2C1BRG = 0x020;
+    } else if (bytes[0] == RADIO_ADDRESS) {
+        I2C1BRG = 0x0C6;
+    }
     // assert start condition 
     I2C1CONbits.SEN = 1;
     // wait for condition to be set
@@ -192,122 +242,66 @@ void WriteCommand(uint8_t *bytes, uint8_t n) {
 }
 
 void PowerUp(void) {
-    uint8_t bytes[3];
-    uint8_t result[1];
-    bytes[0] = POWER_UP;
-    bytes[1] = 0x10;
-    bytes[2] = 0x05;
-    WriteRegister(bytes, 3, result, 1);
+    uint8_t bytes[4];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = POWER_UP;
+    bytes[2] = 0x10;
+    bytes[3] = 0x05;
+    WriteRegister(bytes, 4);
 }
 
-void SetFrequency(uint16_t freq) {
-    uint8_t bytes[5];
-    uint8_t result[1];
-    bytes[0] = FM_TUNE_FREQ;
-    bytes[1] = 0x00;
-    bytes[2] = (freq >> 8) & 0xFF;
-    bytes[3] = freq & 0xFF;
-    bytes[4] = 0x00;
-    WriteRegister(bytes, 5, result, 1);
-}
-
-bool InitOLED(void) {
-	if (!buffer) {
-    	buffer = (uint8_t *)malloc(WIDTH * ((HEIGHT + 7) / 8));
-	    if (!buffer) {
-	        return false;
-	    }
-	}
-
-	uint8_t bytes[8];
-	bytes[0] = OLED_ADDRESS;
-    bytes[1] = OLED_CONTROL;
-
-    bytes[2] = OLED_DISPLAYOFF;
-    bytes[3] = OLED_SETDISPLAYCLOCKDIV;
-    bytes[4] = 0x80;
-    bytes[5] = OLED_SETMULTIPLEX;
-    WriteCommand(bytes, 6);
-
-    bytes[2] = OLED_HEIGHT;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = OLED_SETDISPLAYOFFSET;
-    bytes[3] = 0x00;
-    bytes[4] = OLED_SETSTARTLINE;
-    bytes[5] = OLED_CHARGEPUMP;
-    WriteCommand(bytes, 6);
-
-    bytes[2] = 0x14;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = OLED_MEMORYMODE;
-    bytes[3] = 0x00;
-    bytes[4] = OLED_SEGREMAP;
-    bytes[5] = OLED_COMSCANDEC;
-    WriteCommand(bytes, 6);
-
-    bytes[2] = OLED_SETCOMPINS;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = 0x12;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = OLED_SETCONTRAST;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = 0xCF;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = OLED_SETPRECHARGE;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = 0xF1;
-    WriteCommand(bytes, 3);
-
-    bytes[2] = OLED_SETVCOMDETECT;
-    bytes[3] = 0x40;
-    bytes[4] = OLED_DISPLAYALLON_RESUME;
-    bytes[5] = OLED_NORMALDISPLAY;
-    bytes[6] = OLED_DEACTIVATESCROLL;
-    bytes[7] = OLED_DISPLAYON;
-    WriteCommand(bytes, 8);
-
-    return true;
-}
-
-void UpdateOLED(void) {
-	uint8_t bytes[MAX_BYTES];
-	bytes[0] = OLED_ADDRESS;
-    bytes[1] = OLED_CONTROL;
-
-    bytes[2] = OLED_PAGEADDR;
-    bytes[3] = 0x00;
-    bytes[4] = 0xFF;
-    bytes[5] = OLED_COLUMNADDR;
-    WriteCommand(bytes, 6);
-
+void SetRadioFrequency(uint16_t freq) {
+    // send frequency to radio
+    uint8_t bytes[6];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = FM_TUNE_FREQ;
     bytes[2] = 0x00;
-    WriteCommand(bytes, 3);
+    bytes[3] = (freq >> 8) & 0xFF;
+    bytes[4] = freq & 0xFF;
+    bytes[5] = 0x00;
+    WriteRegister(bytes, 6);
 
-    bytes[2] = 0x7F;
-    WriteCommand(bytes, 3);
-
-	uint16_t count = WIDTH * ((HEIGHT + 7) / 8);
-	uint8_t *ptr = buffer;
-	bytes[1] = 0x40;
-	uint16_t bytesOut = 2;
-	while (count--) {
-		if (bytesOut >= MAX_BYTES) {
-			WriteCommand(bytes, MAX_BYTES);
-			bytesOut = 2;
-		}
-		bytes[bytesOut] = *ptr++;
-		bytesOut++;
-	}
-	WriteCommand(bytes, bytesOut);
+    // begin polling until frequency is reported in STATUS register
+    delay(1000);
+    bytes[1] = FM_TUNE_STATUS;
+    // clear interrupt flags
+    bytes[2] = 0x01;
+    uint8_t result[8];
+    WriteAndReadRegister(bytes, 3, result, 8);
+    freq = (result[2] << 8) | result[3];
+    while (!freq) {
+        WriteAndReadRegister(bytes, 3, result, 8);
+        freq = (result[2] << 8) | result[3];
+        delay(1000);
+    }
 }
 
-void ClearOLED(void) {
-	memset(buffer, 0, WIDTH * ((HEIGHT + 7) / 8));
+void SetVolume(uint8_t vol) {
+    uint8_t bytes[7];
+    bytes[0] = WRITE | RADIO_ADDRESS;
+    bytes[1] = SET_PROPERTY;
+    bytes[2] = 0x00;
+    bytes[3] = RX_VOLUME_H;
+    bytes[4] = RX_VOLUME_L;
+    bytes[5] = 0x00;
+    bytes[6] = vol;
+    WriteRegister(bytes, 7);
+
+    // delay(1000);
+    // uint8_t result[4];
+    // bytes[1] = GET_PROPERTY;
+    // bytes[2] = 0x00;
+    // bytes[3] = RX_VOLUME_H;
+    // bytes[4] = RX_VOLUME_L;
+    // WriteAndReadRegister(bytes, 5, result, 4);
+}
+
+void delay(int n) {
+    while (n > 0) {
+        n--;
+    }
+}
+
+bool GetPoweredUp(void) {
+    return poweredUp;
 }

@@ -4,6 +4,8 @@
 #include "VolumeService.h"
 #include <sys/attribs.h>
 #include "dbprintf.h"
+#include "DisplayService.h"
+#include "RadioService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -15,12 +17,12 @@ bool VOLAFalling = false;
 bool VOLARising = false;
 bool VOLBFalling = false;
 bool VOLBRising = false;
-uint8_t vol = 20;
+volatile uint8_t vol = 20;
+bool muted = false;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitVolumeService(uint8_t Priority) {
-    clrScrn();
-    DB_printf("Init Volume Service\n");
+    DB_printf("Init volume service.\n");
     ES_Event_t ThisEvent;
     MyPriority = Priority;
     
@@ -80,10 +82,26 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
     ES_Event_t ReturnEvent;
     ReturnEvent.EventType = ES_NO_EVENT;
     switch (ThisEvent.EventType) {
+    case ES_INIT:
+        {
+            if (GetPoweredUp()) {
+                ThisEvent.EventType = ES_UPDATE_VOL;
+                ThisEvent.EventParam = vol;
+                PostRadioService(ThisEvent);
+            }
+            break;
+        }
+
     case ES_VOL_BTN:
         {
-         	DB_printf("Volume button pressed\n");
-         	// clrScrn();
+         	muted = !muted;
+            ThisEvent.EventType = ES_UPDATE_VOL;
+            ThisEvent.EventParam = vol;
+            if (muted) {
+                ThisEvent.EventParam = 0;
+            }
+            PostRadioService(ThisEvent);
+            PostDisplayService(ThisEvent);
             break;
         }
 
@@ -107,10 +125,20 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 VOLAFalling = false;
                 VOLBFalling = false;
                 VOLARising = false;
-                vol++;
+                if (vol < 63) {
+                    vol++;
+                }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
                 DB_printf("Volume: %d\n", vol);
+                if (getUpdateStatus()) {
+                    // vol--;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_VOL;
+                    ThisEvent.EventParam = vol;
+                    PostRadioService(ThisEvent);
+                    PostDisplayService(ThisEvent);
+                }
             } else if (VOLAFalling && !VOLBFalling && VOLARising) {
                 VOLAFalling = false;
                 VOLARising = false;
@@ -140,10 +168,20 @@ ES_Event_t RunVolumeService(ES_Event_t ThisEvent) {
                 VOLBFalling = false;
                 VOLAFalling = false;
                 VOLBRising = false;
-                vol--;
+                if (vol) {
+                    vol--;
+                }
                 INTCONbits.INT2EP = 0;
                 INTCONbits.INT4EP = 0;
                 DB_printf("Volume: %d\n", vol);
+                if (getUpdateStatus()) {
+                    // vol++;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_VOL;
+                    ThisEvent.EventParam = vol;
+                    PostRadioService(ThisEvent);
+                    PostDisplayService(ThisEvent);
+                }
             } else if (VOLBFalling && !VOLAFalling && VOLBRising) {
                 VOLBFalling = false;
                 VOLBRising = false;

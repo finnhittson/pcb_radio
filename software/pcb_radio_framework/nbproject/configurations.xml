@@ -46,6 +46,9 @@
       <itemPath>ProjectHeaders/VolumeService.h</itemPath>
       <itemPath>ProjectHeaders/TuneService.h</itemPath>
       <itemPath>ProjectHeaders/RadioService.h</itemPath>
+      <itemPath>ProjectHeaders/font8x8_basic.h</itemPath>
+      <itemPath>ProjectHeaders/DisplayService.h</itemPath>
+      <itemPath>ProjectHeaders/NeoPixelService.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -64,6 +67,8 @@
       <itemPath>ProjectSource/VolumeService.c</itemPath>
       <itemPath>ProjectSource/TuneService.c</itemPath>
       <itemPath>ProjectSource/RadioService.c</itemPath>
+      <itemPath>ProjectSource/DisplayService.c</itemPath>
+      <itemPath>ProjectSource/NeoPixelService.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

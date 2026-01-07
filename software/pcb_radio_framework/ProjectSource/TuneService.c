@@ -5,6 +5,7 @@
 #include <sys/attribs.h>
 #include "dbprintf.h"
 #include "RadioService.h"
+#include "DisplayService.h"
 
 /*----------------------------- Module Defines ----------------------------*/
 
@@ -16,11 +17,12 @@ bool FREQAFalling = false;
 bool FREQARising = false;
 bool FREQBFalling = false;
 bool FREQBRising = false;
-uint8_t freq = 20;
+uint16_t freq = 9010;
+bool freqInc = true;
 
 /*------------------------------ Module Code ------------------------------*/
 bool InitTuneService(uint8_t Priority) {
-    DB_printf("Init Tune Service!\n");
+    DB_printf("Init tune service.\n");
     ES_Event_t ThisEvent;
     MyPriority = Priority;
     
@@ -30,7 +32,9 @@ bool InitTuneService(uint8_t Priority) {
     TRISBbits.TRISB11 = 1;
     // FREQ_BTN - pin 23 - RB12 - input
     TRISBbits.TRISB12 = 1;
-    
+    // disable analog input on RB12
+    ANSELBbits.ANSB12 = 0;
+
     // FREQA interrupt
     // disable interrupt
     IEC0bits.INT1IE = 0;
@@ -78,10 +82,21 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
     ES_Event_t ReturnEvent;
     ReturnEvent.EventType = ES_NO_EVENT;
     switch (ThisEvent.EventType) {
+    case ES_INIT:
+        {
+            if (GetPoweredUp()) {
+                ThisEvent.EventType = ES_UPDATE_FREQ;
+                ThisEvent.EventParam = GetTuneFrequency();
+                PostRadioService(ThisEvent);
+            }
+            break;
+        }
+
     case ES_FREQ_BTN:
         {
          	DB_printf("Frequency button pressed\n");
-         	// clrScrn();
+         	ThisEvent.EventParam = freqInc;
+            PostRadioService(ThisEvent);
             break;
         }
 
@@ -105,10 +120,23 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQAFalling = false;
                 FREQBFalling = false;
                 FREQARising = false;
-                freq--;
+                if (freq == 8750) {
+                    freq = 10800;
+                } else {
+                    freq = freq - 10;
+                }
+                freqInc = false;
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
                 DB_printf("Frequency: %d\n", freq);
+                if (getUpdateStatus()) {
+                    // freq = freq + 10;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_FREQ;
+                    ThisEvent.EventParam = freq;
+                    PostRadioService(ThisEvent);
+                    PostDisplayService(ThisEvent);
+                }
             } else if (FREQAFalling && !FREQBFalling && FREQARising) {
                 FREQAFalling = false;
                 FREQARising = false;
@@ -138,10 +166,23 @@ ES_Event_t RunTuneService(ES_Event_t ThisEvent) {
                 FREQBFalling = false;
                 FREQAFalling = false;
                 FREQBRising = false;
-                freq++;
+                if (freq == 10800) {
+                    freq = 8750;
+                } else {
+                    freq = freq + 10;
+                }
+                freqInc = true;
                 INTCONbits.INT1EP = 0;
                 INTCONbits.INT3EP = 0;
                 DB_printf("Frequency: %d\n", freq);
+                if (getUpdateStatus()) {
+                    // freq = freq - 10;
+                } else {
+                    ThisEvent.EventType = ES_UPDATE_FREQ;
+                    ThisEvent.EventParam = freq;
+                    PostRadioService(ThisEvent);
+                    PostDisplayService(ThisEvent);
+                }
             } else if (FREQBFalling && !FREQAFalling && FREQBRising) {
                 FREQBFalling = false;
                 FREQBRising = false;
@@ -169,4 +210,12 @@ void __ISR(_EXTERNAL_3_VECTOR, IPL4SOFT) FREQBResp(void) {
     ES_Event_t ThisEvent;
     ThisEvent.EventType = ES_FREQB;
     PostTuneService(ThisEvent);
+}
+
+void SetTuneFrequency(uint16_t newFreq) {
+    freq = newFreq;
+}
+
+uint16_t GetTuneFrequency(void) {
+    return freq;
 }

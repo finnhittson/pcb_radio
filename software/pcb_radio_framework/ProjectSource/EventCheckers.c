@@ -41,6 +41,7 @@
 #include "EventCheckers.h"
 #include "VolumeService.h"
 #include "TuneService.h"
+#include "dbprintf.h"
 
 // This is the event checking function sample. It is not intended to be
 // included in the module. It is only here as a sample to guide you in writing
@@ -137,7 +138,7 @@ bool Check4VolBtn(void) {
 
 bool Check4FreqBtn(void) {
   bool ReturnVal = false;
-  static volatile uint8_t LastState = 1;
+  static uint8_t LastState = 1;
   uint8_t CurrentState = PORTBbits.RB12;
   if (LastState != CurrentState && CurrentState == 0) {
     ES_Event_t ThisEvent;
