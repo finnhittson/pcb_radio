@@ -29,7 +29,10 @@ bool InitDisplayService(uint8_t Priority) {
     ES_Event_t ThisEvent;
     MyPriority = Priority;
     DB_printf("Init display service.\n");
-    
+    int idx = 1000000;
+    while (idx) {
+        idx--;
+    }
     InitOLED();
     
     ThisEvent.EventType = ES_INIT;
@@ -50,6 +53,7 @@ ES_Event_t RunDisplayService(ES_Event_t ThisEvent) {
     switch (ThisEvent.EventType) {
     case ES_INIT:
         {
+            InitOLED();
             strcpy(line1, "      PIG");
             snprintf(line2, sizeof(line2), "Vol:  %d oinks", 20);
             uint16_t freq = GetTuneFrequency();
