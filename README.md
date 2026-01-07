@@ -3,7 +3,7 @@
 PCB radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 radio IC and is controlled with PIC32. PCB radio initially started as my final project for a class called Board Level Design (EE256) offered at Stanford which I took during the 2023 fall quarter. 
 
 <p align="center">
-  <img src="images/pcb_radio.JPG" width="400">
+  <img src="images/pcb_radio.png" width="600">
 </p>
 
 ## Eletrical
@@ -16,7 +16,13 @@ The radio itself is the Si4735 made by Skywork Solutions. This IC is responsible
 
 ## Software
 
-The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. The rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC. 
+The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. The rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
+  
 The dispaly is also controlled using the I2C bus. The display shows three lines being the title, volume, and frequency. Due to speed issues, only parts of the display are updated that need to changes while the remaining pixels remain unchanged. For example, when increasing the volume the only pixels that change are the pixels that compose the volume digits. The title, "vol: ", and frequency line all stay the same. The process for updating the frequency is the exact same. All characters are an 8x8 bitmapping.
 
+## Case
 
+The case was designed using Autodesk Fusion. It consists of three parts. The top case, bottom case, and button hat. 
+<p align="center">
+  <img src="images/cad_assembly" width="600">
+</p>
