@@ -22,7 +22,7 @@ The dispaly is also controlled using the I2C bus. The display shows three lines 
 
 ## Case
 
-The case was designed using Autodesk Fusion. It consists of three parts. The top case, bottom case, and button hat. 
+The case was designed using Autodesk Fusion. It consists of three parts. The bottom case, top case, and button hat. The bottom case has heatset inserts to secure the pcb to the case frame. The top case has cutouts for the rotary encoders, display and power switch. The swtich had is needed to bridge the gap between the pcb and the height of the top case. 
 <p align="center">
-  <img src="images/cad_assembly" width="600">
+  <img src="images/cad_assembly.png" width="600">
 </p>
