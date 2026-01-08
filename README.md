@@ -45,7 +45,8 @@ The PCB was designed using KiCad and has the following schematic and layout.
 
 ## Software
 
-The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. The rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
+The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. I use an events and servies framework to write the embedded system running on the microcontroller. There are four services that handel all user and hardware interactions.
+1. Volume Service: Recieves inputs UsingThe rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
   
 The dispaly is also controlled using the I2C bus. The display shows three lines being the title, volume, and frequency. Due to speed issues, only parts of the display are updated that need to changes while the remaining pixels remain unchanged. For example, when increasing the volume the only pixels that change are the pixels that compose the volume digits. The title, "vol: ", and frequency line all stay the same. The process for updating the frequency is the exact same. All characters are an 8x8 bitmapping.
 
