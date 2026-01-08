@@ -1,6 +1,6 @@
 # PCB Radio
 
-PCB radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 radio IC and is controlled with PIC32. PCB radio initially started as my final project for a class called Board Level Design (EE256) offered at Stanford which I took during the 2023 fall quarter. I ended the class by turning in an ugly board with many jumper wires, solder blobs, and quickly written code. I decided to give the project an overhaul and the image below shows the final result. A video demo is avaliable [here](https://youtu.be/nEwSSWuvXEQ).
+PCB Radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 radio IC and is controlled with PIC32. PCB radio initially started as my final project for a class called Board Level Design (EE256) offered at Stanford which I took during the 2023 fall quarter. I ended the class by turning in an ugly board with many jumper wires, solder blobs, and quickly written code. I decided to give the project an overhaul and the image below shows the final result. A video demo is avaliable [here](https://youtu.be/nEwSSWuvXEQ).
 
 <p align="center">
   <img src="images/pcb_radio.png" width="600">
@@ -8,7 +8,13 @@ PCB radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 r
 
 ## Eletrical
 
-The radio itself is the Si4735 made by Skywork Solutions. This IC is responsible for all signal demodulation and filtering. It is controlled with a PIC32 through an I2C bus. Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mutes and unmutes the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
+At a high level there are four main components of PCB Radio, not including the voltage regulation. They are the microcontroller, the rotary encoders for user input, the radio, and the display. These blocks and their control methods are outlined in the following block diagram.
+
+<p align="center">
+  <img src="images/electrical_block_diagram.png" width="600">
+</p>
+
+The radio itself is the Si4735 made by Skywork Solutions. This IC is responsible for all signal demodulation, filtering, and minor amplification. It is controlled using a PIC32MX170F256B through an I2C bus. Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mutes and unmutes the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
 
 <p align="center">
   <img src="images/schematic.png" width="600">
