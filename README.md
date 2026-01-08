@@ -1,6 +1,6 @@
 # PCB Radio
 
-PCB radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 radio IC and is controlled with PIC32. PCB radio initially started as my final project for a class called Board Level Design (EE256) offered at Stanford which I took during the 2023 fall quarter. 
+PCB radio is an FM receiver operating from 88MHz to 108MHz. It uses the Si4735 radio IC and is controlled with PIC32. PCB radio initially started as my final project for a class called Board Level Design (EE256) offered at Stanford which I took during the 2023 fall quarter. I ended the class by turning in an ugly board with many jumper wires, solder blobs, and quickly written code. I decided to give the project an overhaul and the image below shows the final result. A video demo is avaliable [here](https://youtu.be/nEwSSWuvXEQ).
 
 <p align="center">
   <img src="images/pcb_radio.png" width="600">
@@ -22,7 +22,7 @@ The dispaly is also controlled using the I2C bus. The display shows three lines 
 
 ## Case
 
-The case was designed using Autodesk Fusion. It consists of three parts. The top case, bottom case, and button hat. 
+The case was designed using Autodesk Fusion. It consists of three parts. The bottom case, top case, and button hat. The bottom case has heatset inserts to secure the pcb to the case frame. The top case has cutouts for the rotary encoders, display and power switch. The swtich had is needed to bridge the gap between the pcb and the height of the top case. 
 <p align="center">
-  <img src="images/cad_assembly" width="600">
+  <img src="images/cad_assembly.png" width="600">
 </p>
