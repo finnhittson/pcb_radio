@@ -56,10 +56,6 @@ The following flowchart shows how these services interact.
   <img src="images/service_flowchart.png" width="600">
 </p>
 
-UsingThe rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
-  
-The dispaly is also controlled using the I2C bus. The display shows three lines being the title, volume, and frequency. Due to speed issues, only parts of the display are updated that need to changes while the remaining pixels remain unchanged. For example, when increasing the volume the only pixels that change are the pixels that compose the volume digits. The title, "vol: ", and frequency line all stay the same. The process for updating the frequency is the exact same. All characters are an 8x8 bitmapping.
-
 ## Case
 
 The case was designed using Autodesk Fusion. It consists of three parts. The bottom case, top case, and button hat. The bottom case has heatset inserts to secure the pcb to the case frame. The top case has cutouts for the rotary encoders, display and power switch. The swtich had is needed to bridge the gap between the pcb and the height of the top case. 
