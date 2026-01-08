@@ -14,7 +14,25 @@ At a high level there are four main components of PCB Radio, not including the v
   <img src="images/electrical_block_diagram.png" width="600">
 </p>
 
-The radio itself is the Si4735 made by Skywork Solutions. This IC is responsible for all signal demodulation, filtering, and minor amplification. It is controlled using a PIC32MX170F256B through an I2C bus. Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mutes and unmutes the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
+The voltage regulator is the [AMS1117-3.3](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/7158/5272_AMS1117-3.3.pdf). This accepts and input voltage ranging from 5V to 18V. With the DC barrel jack input this lets PCB Radio be powered using a wide variety of DC barrel jack power supplies. The main components the voltage regulator powers are the microcontroller and the radio, while it also supplies the voltage logic level for the rotary encoders.  
+
+<p align="center">
+  <img src="images/pcb_power.png" width="600">
+</p>
+
+The main brains of the operation is a [PIC32MX170F256B](https://ww1.microchip.com/downloads/en/DeviceDoc/PIC32MX1XX2XX%20283644-PIN_Datasheet_DS60001168L.pdf). This microcontroller was chosen for its ease in programming, my prior experience working specifically with Microchip's PIC32 microcontroller line, and its none "over-the-top" performance. The microcontroller recieves inputs from the rotary encoder using 3.3V logic level lines. These controls are interpreted in code and translated to command sent to the radio and display.
+
+<p align="center">
+  <img src="images/pcb_microcontroller.png" width="600">
+</p>
+
+The radio itself is the [Si4735](https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/data-sheets/Si4730-31-34-35-D60.pdf) made by Skywork Solutions. This IC is responsible for all signal demodulation, filtering, and minor amplification. Its frequency range is 64–108 MHz and it is easily configurable through the I2C bus.  
+
+<p align="center">
+  <img src="images/pcb_si4735.png" width="600">
+</p>
+
+Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mute and unmute the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
 
 <p align="center">
   <img src="images/schematic.png" width="600">
