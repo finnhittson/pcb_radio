@@ -32,7 +32,7 @@ The radio itself is the [Si4735](https://www.skyworksinc.com/-/media/Skyworks/SL
   <img src="images/pcb_si4735.png" width="600">
 </p>
 
-Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mute and unmute the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
+Two [rotary encoders](https://www.adafruit.com/product/377?gad_source=1&gad_campaignid=21079227318&gbraid=0AAAAADx9JvRXOeGWMqtKOmSUtX5QiYLC9&gclid=Cj0KCQiApfjKBhC0ARIsAMiR_IvMocYgk_qvi9-FkjdHVu07AlosGyud2bEBIuXVjzKunEIRa65AFNcaAhQ8EALw_wcB) control the volume and frequency selection. The buttons on the volume rotary encoder mute and unmute the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a [128x64 OLED](https://www.adafruit.com/product/938?srsltid=AfmBOorVrnNfretRJXtid3wC_SJarb6P4q2_T9diwocLmxa1sC8mkk7J) display made by Adafruit that is used to display volume and frequency selected.
 
 The PCB was designed using KiCad and has the following schematic and layout. 
 
