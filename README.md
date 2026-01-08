@@ -32,15 +32,21 @@ The radio itself is the [Si4735](https://www.skyworksinc.com/-/media/Skyworks/SL
   <img src="images/pcb_si4735.png" width="600">
 </p>
 
-Two rotary encoders control the volume and frequency selection. The buttons on the volume rotary encoder mute and unmute the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a 128x64 OLED display made by Adafruit that is used to display volume and frequency selected.
+Two [rotary encoders](https://www.adafruit.com/product/377?gad_source=1&gad_campaignid=21079227318&gbraid=0AAAAADx9JvRXOeGWMqtKOmSUtX5QiYLC9&gclid=Cj0KCQiApfjKBhC0ARIsAMiR_IvMocYgk_qvi9-FkjdHVu07AlosGyud2bEBIuXVjzKunEIRa65AFNcaAhQ8EALw_wcB) control the volume and frequency selection. The buttons on the volume rotary encoder mute and unmute the audio. The button on the frequency rotary encoder seeks the next station in the direction of the last frequency change. There is no onboard amplifier or speaker so the audio is passed to an AUX output. Lastly there is a [128x64 OLED](https://www.adafruit.com/product/938?srsltid=AfmBOorVrnNfretRJXtid3wC_SJarb6P4q2_T9diwocLmxa1sC8mkk7J) display made by Adafruit that is used to display volume and frequency selected.
+
+The PCB was designed using KiCad and has the following schematic and layout. 
 
 <p align="center">
   <img src="images/schematic.png" width="600">
 </p>
+<p align="center">
+  <img src="images/layout.png" width="600">
+</p>
 
 ## Software
 
-The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. The rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
+The code for this was written in C and programmed onto the PIC32 using the MPLABX IDE with the SNAP programmer. I use an events and servies framework to write the embedded system running on the microcontroller. There are four services that handel all user and hardware interactions.
+1. Volume Service: Recieves inputs UsingThe rotary encoders operate on an interrupt basis to increment or decrement a counter. The updated value is passed to the Si4735 IC which correspondingly changes the volume or frequency. The frequency and volume buttons are periodically checked and the mute/seek commands are also sent along to the Si4735 IC.  
   
 The dispaly is also controlled using the I2C bus. The display shows three lines being the title, volume, and frequency. Due to speed issues, only parts of the display are updated that need to changes while the remaining pixels remain unchanged. For example, when increasing the volume the only pixels that change are the pixels that compose the volume digits. The title, "vol: ", and frequency line all stay the same. The process for updating the frequency is the exact same. All characters are an 8x8 bitmapping.
 
